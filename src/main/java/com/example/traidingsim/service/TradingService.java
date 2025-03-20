@@ -53,6 +53,7 @@ public class TradingService {
         return krakenWebSocketService.getCryptoPrices();
     }
 
+
     /**
      * Simulate buying cryptocurrency.
      * @param crypto The cryptocurrency to buy.
