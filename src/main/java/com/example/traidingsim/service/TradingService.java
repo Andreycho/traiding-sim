@@ -17,7 +17,7 @@ import static com.example.traidingsim.Type.SELL;
 @Service
 public class TradingService {
 
-    private static final double INITIAL_BALANCE = 10000.0;
+    private static final double INITIAL_BALANCE = 100000.0;
     /**
      * -- GETTER --
      *  Get the current account balance.
@@ -41,7 +41,7 @@ public class TradingService {
     @Autowired
     public TradingService(KrakenWebSocketService krakenWebSocketService) {
         this.krakenWebSocketService = krakenWebSocketService;
-        this.accountBalance = INITIAL_BALANCE; // Initialize balance
+        this.accountBalance = INITIAL_BALANCE;
         this.cryptoHoldings = new HashMap<>();
         this.transactionHistory = new ArrayList<>();
     }
@@ -61,11 +61,15 @@ public class TradingService {
      */
     public String buyCrypto(String crypto, double amount) {
         Map<String, Double> prices = getCryptoPrices();
-        if (!prices.containsKey(crypto)) {
+
+        String keyUSD = crypto + "/USD";
+        String key = prices.containsKey(crypto) ? crypto : keyUSD;
+
+        if (!prices.containsKey(key)) {
             return "Error: Cryptocurrency not available.";
         }
 
-        double price = prices.get(crypto);
+        double price = prices.get(key);
         double totalCost = price * amount;
 
         if (totalCost > accountBalance) {
@@ -93,11 +97,14 @@ public class TradingService {
         }
 
         Map<String, Double> prices = getCryptoPrices();
-        if (!prices.containsKey(crypto)) {
+        String keyUSD = crypto + "/USD";
+        String key = prices.containsKey(crypto) ? crypto : keyUSD;
+
+        if (!prices.containsKey(key)) {
             return "Error: Cryptocurrency not available.";
         }
 
-        double price = prices.get(crypto);
+        double price = prices.get(key);
         double totalRevenue = price * amount;
 
         cryptoHoldings.put(crypto, cryptoHoldings.get(crypto) - amount);
