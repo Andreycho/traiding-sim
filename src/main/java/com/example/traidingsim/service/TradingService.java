@@ -1,5 +1,8 @@
 package com.example.traidingsim.service;
 
+import com.example.traidingsim.AccountRepository;
+import com.example.traidingsim.TransactionRepository;
+import com.example.traidingsim.model.Account;
 import com.example.traidingsim.model.Transaction;
 
 import lombok.Getter;
@@ -17,6 +20,12 @@ import static com.example.traidingsim.Type.SELL;
 @Service
 public class TradingService {
 
+    @Autowired
+    private TransactionRepository transactionRepository;
+
+    @Autowired
+    private AccountRepository accountRepository;
+
     private static final double INITIAL_BALANCE = 100000.0;
     /**
      * -- GETTER --
@@ -29,21 +38,30 @@ public class TradingService {
      *  Get the holdings for all cryptocurrencies.
      */
     @Getter
-    private final Map<String, Double> cryptoHoldings; // Stores holdings by cryptocurrency
+    private final Map<String, Double> cryptoHoldings;
     /**
      * -- GETTER --
      *  Retrieve the transaction history.
      */
-    @Getter
-    private final List<Transaction> transactionHistory;
+//    @Getter
+//    private final List<Transaction> transactionHistory;
     private final KrakenWebSocketService krakenWebSocketService;
 
     @Autowired
-    public TradingService(KrakenWebSocketService krakenWebSocketService) {
+    public TradingService(KrakenWebSocketService krakenWebSocketService, AccountRepository accountRepository) {
         this.krakenWebSocketService = krakenWebSocketService;
-        this.accountBalance = INITIAL_BALANCE;
-        this.cryptoHoldings = new HashMap<>();
-        this.transactionHistory = new ArrayList<>();
+        this.accountRepository = accountRepository;
+        Account account = accountRepository.findById(1L).orElseGet(() -> {
+            Account newAccount = new Account(INITIAL_BALANCE);
+            accountRepository.save(newAccount);
+            return newAccount;
+        });
+
+        this.accountBalance = account.getBalance();
+        this.cryptoHoldings = account.getCryptoHoldings();
+//        this.accountBalance = INITIAL_BALANCE;
+//        this.cryptoHoldings = new HashMap<>();
+//        this.transactionHistory = new ArrayList<>();
     }
 
     /**
@@ -53,6 +71,11 @@ public class TradingService {
         return krakenWebSocketService.getCryptoPrices();
     }
 
+    /**
+     * Retrieve the transaction history.
+     * @return A list of all transactions made (both buy and sell).
+     */
+    public List<Transaction> getTransactionHistory() { return transactionRepository.findAll(); }
 
     /**
      * Simulate buying cryptocurrency.
@@ -80,8 +103,14 @@ public class TradingService {
         accountBalance -= totalCost;
         cryptoHoldings.put(crypto, cryptoHoldings.getOrDefault(crypto, 0.0) + amount);
 
+        Account account = accountRepository.findById(1L).orElse(new Account(INITIAL_BALANCE));
+        account.setBalance(accountBalance);
+        account.setCryptoHoldings(cryptoHoldings);
+        accountRepository.save(account);
+
         Transaction transaction = new Transaction(crypto, amount, price, totalCost, BUY);
-        transactionHistory.add(transaction);
+//        transactionHistory.add(transaction);
+        transactionRepository.save(transaction);
 
         return "Successfully bought " + amount + " " + crypto + " for $" + totalCost;
     }
@@ -111,8 +140,14 @@ public class TradingService {
         cryptoHoldings.put(crypto, cryptoHoldings.get(crypto) - amount);
         accountBalance += totalRevenue;
 
+        Account account = accountRepository.findById(1L).orElse(new Account(INITIAL_BALANCE));
+        account.setBalance(accountBalance);
+        account.setCryptoHoldings(cryptoHoldings);
+        accountRepository.save(account);
+
         Transaction transaction = new Transaction(crypto, amount, price, totalRevenue, SELL);
-        transactionHistory.add(transaction);
+//        transactionHistory.add(transaction);
+        transactionRepository.save(transaction);
 
         return "Successfully sold " + amount + " " + crypto + " for $" + totalRevenue;
     }
@@ -123,7 +158,14 @@ public class TradingService {
     public String resetAccount() {
         this.accountBalance = INITIAL_BALANCE;
         this.cryptoHoldings.clear();
-        this.transactionHistory.clear();
+
+        Account account = accountRepository.findById(1L).orElse(new Account(INITIAL_BALANCE));
+        account.setBalance(accountBalance);
+        account.setCryptoHoldings(cryptoHoldings);
+        accountRepository.save(account);
+
+//        this.transactionHistory.clear();
+        transactionRepository.deleteAll();
         return "Account has been reset to the initial balance of $" + INITIAL_BALANCE;
     }
 

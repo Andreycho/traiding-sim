@@ -1,19 +1,31 @@
 package com.example.traidingsim.model;
 
 import com.example.traidingsim.Type;
+import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+@Entity
+@Table(name = "transactions")
 public class Transaction {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private long Id;
+
     private String crypto;
     private double amount;
     private double price;
     private double total;
     private String dateTime;
+
+    @Enumerated(EnumType.STRING)
     private Type type;
 
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+    public Transaction() {}
 
     public Transaction(String crypto, double amount, double price, double total, Type type) {
         this.crypto = crypto;
@@ -23,6 +35,10 @@ public class Transaction {
         this.dateTime = LocalDateTime.now().format( FORMATTER);
         this.type = type;
     }
+
+    public long getId() { return Id; }
+
+    public void setId(long Id) { this.Id = Id; }
 
     public String getCrypto() {
         return crypto;
