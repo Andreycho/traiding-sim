@@ -6,11 +6,10 @@ import com.example.traidingsim.model.Account;
 import com.example.traidingsim.model.Transaction;
 
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -18,6 +17,7 @@ import static com.example.traidingsim.Type.BUY;
 import static com.example.traidingsim.Type.SELL;
 
 @Service
+@Slf4j
 public class TradingService {
 
     @Autowired
@@ -112,6 +112,8 @@ public class TradingService {
 //        transactionHistory.add(transaction);
         transactionRepository.save(transaction);
 
+        log.info("Successfully bought {} {} for ${}", amount, crypto, totalCost);
+
         return "Successfully bought " + amount + " " + crypto + " for $" + totalCost;
     }
 
@@ -149,6 +151,8 @@ public class TradingService {
 //        transactionHistory.add(transaction);
         transactionRepository.save(transaction);
 
+        log.info("Successfully sold {} {} for ${}", amount, crypto, totalRevenue);
+
         return "Successfully sold " + amount + " " + crypto + " for $" + totalRevenue;
     }
 
@@ -166,6 +170,9 @@ public class TradingService {
 
 //        this.transactionHistory.clear();
         transactionRepository.deleteAll();
+
+        log.info("Account has been reset to the initial balance of ${}", INITIAL_BALANCE);
+
         return "Account has been reset to the initial balance of $" + INITIAL_BALANCE;
     }
 
