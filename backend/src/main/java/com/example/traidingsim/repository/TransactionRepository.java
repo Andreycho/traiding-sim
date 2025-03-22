@@ -1,4 +1,4 @@
-package com.example.traidingsim;
+package com.example.traidingsim.repository;
 
 import com.example.traidingsim.model.Transaction;
 import org.springframework.data.jpa.repository.JpaRepository;

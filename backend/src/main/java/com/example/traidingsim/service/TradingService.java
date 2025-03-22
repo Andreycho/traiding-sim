@@ -1,7 +1,7 @@
 package com.example.traidingsim.service;
 
-import com.example.traidingsim.AccountRepository;
-import com.example.traidingsim.TransactionRepository;
+import com.example.traidingsim.repository.AccountRepository;
+import com.example.traidingsim.repository.TransactionRepository;
 import com.example.traidingsim.model.Account;
 import com.example.traidingsim.model.Transaction;
 
@@ -139,7 +139,14 @@ public class TradingService {
         double price = prices.get(key);
         double totalRevenue = price * amount;
 
-        cryptoHoldings.put(crypto, cryptoHoldings.get(crypto) - amount);
+        double newAmount = cryptoHoldings.get(crypto) - amount;
+
+        if (newAmount <= 0) {
+            cryptoHoldings.remove(crypto);
+        } else {
+            cryptoHoldings.put(crypto, newAmount);
+        }
+
         accountBalance += totalRevenue;
 
         Account account = accountRepository.findById(1L).orElse(new Account(INITIAL_BALANCE));
@@ -148,13 +155,13 @@ public class TradingService {
         accountRepository.save(account);
 
         Transaction transaction = new Transaction(crypto, amount, price, totalRevenue, SELL);
-//        transactionHistory.add(transaction);
         transactionRepository.save(transaction);
 
         log.info("Successfully sold {} {} for ${}", amount, crypto, totalRevenue);
 
         return "Successfully sold " + amount + " " + crypto + " for $" + totalRevenue;
     }
+
 
     /**
      * Reset the account balance and clear transaction history.
