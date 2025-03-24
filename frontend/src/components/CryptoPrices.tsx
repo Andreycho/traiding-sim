@@ -49,7 +49,7 @@ const CryptoPrices: React.FC<CryptoPricesProps> = ({ setBalance }) => {
         console.log("Connected to WebSocket")
         client.subscribe("/topic/prices", (message) => {
           const data = JSON.parse(message.body)
-          console.log(`📩 Received price update: ${data.symbol} -> $${data.price}`)
+          console.log(`Received price update: ${data.symbol} -> $${data.price}`)
 
           setPrices((prevPrices) => ({
             ...prevPrices,
@@ -80,16 +80,18 @@ const CryptoPrices: React.FC<CryptoPricesProps> = ({ setBalance }) => {
       const response = await fetch(`/api/buy?crypto=${crypto}&amount=${amount}`, {
         method: "POST",
       })
-      if (!response.ok) throw new Error("Failed to buy cryptocurrency")
 
-      const message = await response.text()
-      toast.success(message)
+      const data = await response.json()
 
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to buy cryptocurrency");
+      }
+      
+      toast.success(data.message || "Cryptocurrency bought successfully!")
       await fetchBalance()
-
       setSelectedCrypto(null)
     } catch (error) {
-      toast.error(`Error buying cryptocurrency: ${(error as Error).message}`)
+      toast.error((error as Error).message)
     }
   }
 
@@ -159,4 +161,3 @@ const CryptoPrices: React.FC<CryptoPricesProps> = ({ setBalance }) => {
 }
 
 export default CryptoPrices
-

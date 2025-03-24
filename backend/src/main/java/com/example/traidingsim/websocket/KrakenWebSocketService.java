@@ -1,16 +1,18 @@
-package com.example.traidingsim.service;
+package com.example.traidingsim.websocket;
 
+import com.example.traidingsim.model.dto.CryptoPriceDTO;
+import com.example.traidingsim.mapper.CryptoPriceMapper;
+import com.example.traidingsim.model.dto.CryptoPricePayloadDTO;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.websocket.*;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
+
 import java.net.URI;
-import java.util.Map;
+import java.util.Collections;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.Map;
 
 @ClientEndpoint
 @Service
@@ -18,19 +20,15 @@ import java.util.concurrent.ConcurrentHashMap;
 public class KrakenWebSocketService {
 
     private static final String KRAKEN_WEBSOCKET_URI = "wss://ws.kraken.com/v2";
-    @Getter
+    private final ObjectMapper objectMapper;
+    private final FrontendWebSocketService frontendWebSocketService;
     private final Map<String, Double> cryptoPrices = new ConcurrentHashMap<>();
 
-    private Session session;
-
-    private final SimpMessagingTemplate messagingTemplate;
-
-    @Autowired
-    public KrakenWebSocketService(SimpMessagingTemplate messagingTemplate) {
-        this.messagingTemplate = messagingTemplate;
+    public KrakenWebSocketService(ObjectMapper objectMapper, FrontendWebSocketService frontendWebSocketService) {
+        this.objectMapper = objectMapper;
+        this.frontendWebSocketService = frontendWebSocketService;
         connectToKrakenWebSocket();
     }
-
 
     private void connectToKrakenWebSocket() {
         try {
@@ -44,7 +42,6 @@ public class KrakenWebSocketService {
 
     @OnOpen
     public void onOpen(Session session) {
-        this.session = session;
         String subscribeMessage = """
                 {
                     "method": "subscribe",
@@ -65,24 +62,28 @@ public class KrakenWebSocketService {
         try {
             log.debug("Received message: {}", message);
 
-            ObjectMapper objectMapper = new ObjectMapper();
             JsonNode jsonNode = objectMapper.readTree(message);
 
             if (jsonNode.has("data") && jsonNode.get("data").isArray()) {
                 JsonNode dataNode = jsonNode.get("data").get(0);
-                String symbol = dataNode.get("symbol").asText();
-                double lastPrice = dataNode.get("last").asDouble();
 
-                cryptoPrices.put(symbol, lastPrice);
+                CryptoPricePayloadDTO payload = new CryptoPricePayloadDTO();
+                payload.setSymbol(dataNode.get("symbol").asText());
+                payload.setLastPrice(dataNode.get("last").asDouble());
 
-                log.info("Updated price for {}: ${}", symbol, lastPrice);
+                CryptoPriceDTO dto = CryptoPriceMapper.toDTO(payload);
 
-                messagingTemplate.convertAndSend("/topic/prices", Map.of("symbol", symbol, "price", lastPrice));
+                frontendWebSocketService.broadcastCryptoPrice(dto);
 
+                cryptoPrices.put(payload.getSymbol(), payload.getLastPrice());
+                log.info("Updated price for {}: {}", payload.getSymbol(), payload.getLastPrice());
             }
         } catch (Exception e) {
-            log.error("Error processing Websocket message", e);
+            log.error("Error processing WebSocket message", e);
         }
     }
 
+    public Map<String, Double> getCryptoPrices() {
+        return Collections.unmodifiableMap(cryptoPrices);
+    }
 }

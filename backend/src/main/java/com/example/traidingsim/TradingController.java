@@ -1,6 +1,7 @@
 package com.example.traidingsim;
 
 import com.example.traidingsim.model.Transaction;
+import com.example.traidingsim.model.dto.ApiResponse;
 import com.example.traidingsim.service.TradingService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -10,12 +11,11 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api")
-@CrossOrigin(origins = "*") // Allow cross-origin requests for frontend integration
+@CrossOrigin(origins = "*")
 public class TradingController {
 
     private final TradingService tradingService;
 
-    // Constructor-based dependency injection
     public TradingController(TradingService tradingService) {
         this.tradingService = tradingService;
     }
@@ -24,11 +24,6 @@ public class TradingController {
      * Endpoint to fetch real-time cryptocurrency prices.
      * @return A map of cryptocurrency symbols to their current prices.
      */
-//    @GetMapping("/prices")
-//    public Map<String, Double> getRealTimePrices() {
-//        return tradingService.getCryptoPrices();
-//    }
-
     @GetMapping("/prices")
     public ResponseEntity<Map<String, Double>> getPrices() {
         Map<String, Double> latestPrices = tradingService.getCryptoPrices();
@@ -42,9 +37,16 @@ public class TradingController {
      * @return Success or error message.
      */
     @PostMapping("/buy")
-    public String buyCrypto(@RequestParam String crypto, @RequestParam double amount) {
-        return tradingService.buyCrypto(crypto, amount);
+    public ResponseEntity<ApiResponse> buyCrypto(@RequestParam String crypto, @RequestParam double amount) {
+        try {
+            String message = tradingService.buyCrypto(crypto, amount);
+            return ResponseEntity.ok(new ApiResponse(true, message));
+        } catch (RuntimeException ex) {
+            return ResponseEntity.badRequest().body(new ApiResponse(false, ex.getMessage()));
+        }
     }
+
+
 
     /**
      * Endpoint to sell cryptocurrency.
@@ -53,43 +55,60 @@ public class TradingController {
      * @return Success or error message.
      */
     @PostMapping("/sell")
-    public String sellCrypto(@RequestParam String crypto, @RequestParam double amount) {
-        return tradingService.sellCrypto(crypto, amount);
+    public ResponseEntity<ApiResponse> sellCrypto(@RequestParam String crypto, @RequestParam double amount) {
+        try {
+            String message = tradingService.sellCrypto(crypto, amount);
+            return ResponseEntity.ok(new ApiResponse(true, message));
+        } catch (RuntimeException ex) {
+            return ResponseEntity.badRequest().body(new ApiResponse(false, ex.getMessage()));
+        }
     }
+
+
 
     /**
      * Endpoint to retrieve the transaction history.
      * @return A list of all transactions made (both buy and sell).
      */
     @GetMapping("/transactions")
-    public List<Transaction> getTransactionHistory() {
-        return tradingService.getTransactionHistory();
+    public ResponseEntity<List<Transaction>> getTransactionHistory() {
+        return ResponseEntity.ok(tradingService.getTransactionHistory());
     }
+
 
     /**
      * Endpoint to reset the account balance and holdings.
      * @return Success message indicating the account has been reset.
      */
     @PostMapping("/reset")
-    public String resetAccount() {
-        return tradingService.resetAccount();
+    public ResponseEntity<ApiResponse> resetAccount() {
+        try {
+            String message = tradingService.resetAccount();
+            return ResponseEntity.ok(new ApiResponse(true, message));
+        } catch (Exception ex) {
+            return ResponseEntity.badRequest().body(new ApiResponse(false, ex.getMessage()));
+        }
     }
+
+
 
     /**
      * Endpoint to fetch the current account balance.
      * @return The current account balance as a double.
      */
     @GetMapping("/balance")
-    public double getAccountBalance() {
-        return tradingService.getAccountBalance();
+    public ResponseEntity<Double> getAccountBalance() {
+        return ResponseEntity.ok(tradingService.getAccountBalance());
     }
+
 
     /**
      * Endpoint to fetch current cryptocurrency holdings.
      * @return A map of cryptocurrencies and the amounts held.
      */
     @GetMapping("/holdings")
-    public Map<String, Double> getCryptoHoldings() {
-        return tradingService.getCryptoHoldings();
+    public ResponseEntity<Map<String, Double>> getCryptoHoldings() {
+        return ResponseEntity.ok(tradingService.getCryptoHoldings());
     }
+
 }

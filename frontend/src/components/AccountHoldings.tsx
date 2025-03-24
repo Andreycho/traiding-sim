@@ -144,12 +144,13 @@ const AccountHoldings: React.FC = () => {
         method: "POST",
       })
 
+      const data = await response.json()
+
       if (!response.ok) {
-        throw new Error("Failed to sell cryptocurrency")
+        throw new Error(data.message || "Failed to sell cryptocurrency")
       }
 
-      const message = await response.text()
-      toast.success(message)
+      toast.success(data.message)
 
       const updatedHoldingsResponse = await fetch("/api/holdings")
       const updatedHoldingsData: HoldingsResponse = await updatedHoldingsResponse.json()
@@ -169,7 +170,7 @@ const AccountHoldings: React.FC = () => {
 
       await fetchBalance()
     } catch (error) {
-      toast.error(`Error selling cryptocurrency: ${(error as Error).message}`)
+      toast.error((error as Error).message)
     }
   }
 

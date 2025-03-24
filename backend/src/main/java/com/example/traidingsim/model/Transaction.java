@@ -1,6 +1,6 @@
 package com.example.traidingsim.model;
 
-import com.example.traidingsim.Type;
+import com.example.traidingsim.model.enumeration.Type;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;

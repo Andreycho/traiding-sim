@@ -1,10 +1,14 @@
 package com.example.traidingsim.service;
 
+import com.example.traidingsim.exception.CryptoNotFoundException;
+import com.example.traidingsim.exception.InsufficientFundsException;
+import com.example.traidingsim.exception.InsufficientHoldingsException;
 import com.example.traidingsim.repository.AccountRepository;
 import com.example.traidingsim.repository.TransactionRepository;
 import com.example.traidingsim.model.Account;
 import com.example.traidingsim.model.Transaction;
 
+import com.example.traidingsim.websocket.KrakenWebSocketService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,8 +17,8 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Map;
 
-import static com.example.traidingsim.Type.BUY;
-import static com.example.traidingsim.Type.SELL;
+import static com.example.traidingsim.model.enumeration.Type.BUY;
+import static com.example.traidingsim.model.enumeration.Type.SELL;
 
 @Service
 @Slf4j
@@ -39,12 +43,7 @@ public class TradingService {
      */
     @Getter
     private final Map<String, Double> cryptoHoldings;
-    /**
-     * -- GETTER --
-     *  Retrieve the transaction history.
-     */
-//    @Getter
-//    private final List<Transaction> transactionHistory;
+
     private final KrakenWebSocketService krakenWebSocketService;
 
     @Autowired
@@ -59,9 +58,6 @@ public class TradingService {
 
         this.accountBalance = account.getBalance();
         this.cryptoHoldings = account.getCryptoHoldings();
-//        this.accountBalance = INITIAL_BALANCE;
-//        this.cryptoHoldings = new HashMap<>();
-//        this.transactionHistory = new ArrayList<>();
     }
 
     /**
@@ -90,15 +86,14 @@ public class TradingService {
         String key = prices.containsKey(crypto) ? crypto : keyUSD;
 
         if (!prices.containsKey(key)) {
-            return "Error: Cryptocurrency not available.";
+            throw new CryptoNotFoundException("Cryptocurrency '" + crypto + "' not available.");
         }
 
         double price = prices.get(key);
         double totalCost = price * amount;
 
         if (totalCost > accountBalance) {
-            
-            return "Error: Insufficient funds. Your balance is $" + accountBalance;
+            throw new InsufficientFundsException("Insufficient funds. Your balance is $" + accountBalance);
         }
 
         accountBalance -= totalCost;
@@ -110,7 +105,7 @@ public class TradingService {
         accountRepository.save(account);
 
         Transaction transaction = new Transaction(crypto, amount, price, totalCost, BUY);
-//        transactionHistory.add(transaction);
+
         transactionRepository.save(transaction);
 
         log.info("Successfully bought {} {} for ${}", amount, crypto, totalCost);
@@ -126,7 +121,7 @@ public class TradingService {
      */
     public String sellCrypto(String crypto, double amount) {
         if (!cryptoHoldings.containsKey(crypto) || cryptoHoldings.getOrDefault(crypto, 0.0) < amount) {
-            return "Error: Insufficient holdings of " + crypto;
+            throw new InsufficientHoldingsException("Insufficient holdings of " + crypto);
         }
 
         Map<String, Double> prices = getCryptoPrices();
@@ -134,7 +129,7 @@ public class TradingService {
         String key = prices.containsKey(crypto) ? crypto : keyUSD;
 
         if (!prices.containsKey(key)) {
-            return "Error: Cryptocurrency not available.";
+            throw new CryptoNotFoundException("Cryptocurrency '" + crypto + "' not available.");
         }
 
         double price = prices.get(key);
@@ -176,7 +171,6 @@ public class TradingService {
         account.setCryptoHoldings(cryptoHoldings);
         accountRepository.save(account);
 
-//        this.transactionHistory.clear();
         transactionRepository.deleteAll();
 
         log.info("Account has been reset to the initial balance of ${}", INITIAL_BALANCE);
