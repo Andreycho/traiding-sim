@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.websocket.*;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import java.net.URI;
 import java.util.Map;
@@ -21,9 +23,14 @@ public class KrakenWebSocketService {
 
     private Session session;
 
-    public KrakenWebSocketService() {
+    private final SimpMessagingTemplate messagingTemplate;
+
+    @Autowired
+    public KrakenWebSocketService(SimpMessagingTemplate messagingTemplate) {
+        this.messagingTemplate = messagingTemplate;
         connectToKrakenWebSocket();
     }
+
 
     private void connectToKrakenWebSocket() {
         try {
@@ -69,6 +76,9 @@ public class KrakenWebSocketService {
                 cryptoPrices.put(symbol, lastPrice);
 
                 log.info("Updated price for {}: ${}", symbol, lastPrice);
+
+                messagingTemplate.convertAndSend("/topic/prices", Map.of("symbol", symbol, "price", lastPrice));
+
             }
         } catch (Exception e) {
             log.error("Error processing Websocket message", e);

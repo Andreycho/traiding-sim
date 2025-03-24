@@ -2,6 +2,7 @@
 
 import type React from "react"
 import { useState } from "react"
+import { toast } from "sonner"
 
 interface SellCryptoFormProps {
   crypto: string
@@ -17,7 +18,7 @@ const SellCryptoForm: React.FC<SellCryptoFormProps> = ({ crypto, onSell, onCance
     if (typeof amount === "number") {
       onSell(crypto, amount)
     } else {
-      alert("Please enter a valid amount to sell.")
+      toast.error("Please enter a valid amount to sell.")
     }
   }
 

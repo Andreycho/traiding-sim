@@ -4,6 +4,7 @@ import type React from "react"
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import CryptoPrices from "@/components/CryptoPrices"
+import { toast } from "sonner"
 
 const Home: React.FC = () => {
   const navigate = useNavigate()
@@ -34,7 +35,7 @@ const Home: React.FC = () => {
   const handleReset = async () => {
     try {
       await fetch("/api/reset", { method: "POST" })
-      alert("Account has been reset!")
+      toast.success("Account has been reset!")
       fetchBalance()
     } catch (error) {
       console.error("Error resetting account:", error)

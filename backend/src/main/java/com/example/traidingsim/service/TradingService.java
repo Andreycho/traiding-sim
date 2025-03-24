@@ -97,6 +97,7 @@ public class TradingService {
         double totalCost = price * amount;
 
         if (totalCost > accountBalance) {
+            
             return "Error: Insufficient funds. Your balance is $" + accountBalance;
         }
 

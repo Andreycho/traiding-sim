@@ -2,6 +2,7 @@
 
 import type React from "react"
 import { useState } from "react"
+import { toast } from "sonner"
 
 interface BuyCryptoFormProps {
   crypto: string
@@ -32,7 +33,7 @@ const BuyCryptoForm: React.FC<BuyCryptoFormProps> = ({ crypto, onBuy, onCancel }
     e.preventDefault()
 
     if (amount === "" || (typeof amount === "number" && amount < 0.1)) {
-      alert("Please enter at least 0.1.")
+      toast.error("Please enter at least 0.1.")
       return
     }
 

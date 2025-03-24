@@ -1,4 +1,5 @@
 import React from "react";
+import { Toaster } from "@/components/ui/sonner"
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import Home from "./pages/Home";
 import AccountHoldings from "./components/AccountHoldings";
@@ -6,7 +7,8 @@ import TransactionHistory from "./components/TransactionHistory";
 
 const App: React.FC = () => {
   return (
-    <Router>
+    <>
+      <Router>
       <div>
         <Routes>
           <Route path="/" element={<Home />} />
@@ -15,6 +17,8 @@ const App: React.FC = () => {
         </Routes>
       </div>
     </Router>
+    <Toaster richColors position="top-right" />
+    </>
   );
 };
 

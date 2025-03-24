@@ -4,6 +4,9 @@ import type React from "react"
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import SellCryptoForm from "./SellCryptoForm"
+import { toast } from "sonner"
+import { Client } from "@stomp/stompjs"
+import SockJS from "sockjs-client"
 
 interface Holding {
   crypto: string
@@ -54,14 +57,14 @@ const AccountHoldings: React.FC = () => {
       try {
         const holdingsResponse = await fetch("/api/holdings")
         if (!holdingsResponse.ok) throw new Error("Failed to fetch holdings")
-
+  
         const holdingsData: HoldingsResponse = await holdingsResponse.json()
-
+  
         const pricesResponse = await fetch("/api/prices")
         if (!pricesResponse.ok) throw new Error("Failed to fetch prices")
-
+  
         const pricesData: PricesResponse = await pricesResponse.json()
-
+  
         const transformedData = Object.entries(holdingsData).map(([crypto, amount]) => {
           const price = pricesData[crypto]
           return {
@@ -71,7 +74,7 @@ const AccountHoldings: React.FC = () => {
             totalValue: price ? price * amount : 0,
           }
         })
-
+  
         setHoldings(transformedData)
         setPrices(pricesData)
         await fetchBalance()
@@ -80,35 +83,59 @@ const AccountHoldings: React.FC = () => {
         console.error(error)
       }
     }
-
+  
     fetchHoldingsAndPrices()
-
-    const interval = setInterval(() => {
-      fetch("/api/prices")
-        .then((response) => response.json())
-        .then((pricesData: PricesResponse) => {
-          setPrices(pricesData)
-
+  
+    const socket = new SockJS("http://localhost:8080/ws")
+    const client = new Client({
+      webSocketFactory: () => socket,
+      reconnectDelay: 5000,
+      onConnect: () => {
+        console.log("Connected to WebSocket")
+  
+        client.subscribe("/topic/prices", (message) => {
+          const data = JSON.parse(message.body)
+          console.log(`📩 Received price update: ${data.symbol} -> $${data.price}`)
+  
+          setPrices((prevPrices) => ({
+            ...prevPrices,
+            [data.symbol]: data.price,
+          }))
+  
           setHoldings((prevHoldings) =>
             prevHoldings.map((holding) => {
-              const updatedPrice = pricesData[holding.crypto]
-              return {
-                ...holding,
-                price: updatedPrice || 0,
-                totalValue: updatedPrice ? updatedPrice * holding.amount : 0,
+              if (holding.crypto === data.symbol) {
+                console.log(
+                  `Updating holding: ${holding.crypto} | New Price: $${data.price.toFixed(2)}`
+                )
+  
+                return {
+                  ...holding,
+                  price: data.price,
+                  totalValue: data.price * holding.amount,
+                }
               }
-            }),
+              return holding
+            })
           )
         })
-        .catch((error) => console.error("Error fetching updated prices:", error))
-    }, 5000)
-
-    return () => clearInterval(interval)
+      },
+      onStompError: (frame) => {
+        console.error("STOMP error:", frame)
+        setError("Failed to connect to WebSocket.")
+      },
+    })
+  
+    client.activate()
+  
+    return () => {
+      client.deactivate()
+    }
   }, [])
 
   const handleSell = async (crypto: string, amount: number) => {
     if (!amount || amount <= 0) {
-      alert("Please enter a valid amount to sell.")
+      toast.error("Please enter a valid amount to sell.")
       return
     }
 
@@ -122,7 +149,7 @@ const AccountHoldings: React.FC = () => {
       }
 
       const message = await response.text()
-      alert(message)
+      toast.success(message)
 
       const updatedHoldingsResponse = await fetch("/api/holdings")
       const updatedHoldingsData: HoldingsResponse = await updatedHoldingsResponse.json()
@@ -142,7 +169,7 @@ const AccountHoldings: React.FC = () => {
 
       await fetchBalance()
     } catch (error) {
-      alert(`Error selling cryptocurrency: ${(error as Error).message}`)
+      toast.error(`Error selling cryptocurrency: ${(error as Error).message}`)
     }
   }
 

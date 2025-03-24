@@ -2,6 +2,7 @@ package com.example.traidingsim;
 
 import com.example.traidingsim.model.Transaction;
 import com.example.traidingsim.service.TradingService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,9 +24,15 @@ public class TradingController {
      * Endpoint to fetch real-time cryptocurrency prices.
      * @return A map of cryptocurrency symbols to their current prices.
      */
+//    @GetMapping("/prices")
+//    public Map<String, Double> getRealTimePrices() {
+//        return tradingService.getCryptoPrices();
+//    }
+
     @GetMapping("/prices")
-    public Map<String, Double> getRealTimePrices() {
-        return tradingService.getCryptoPrices();
+    public ResponseEntity<Map<String, Double>> getPrices() {
+        Map<String, Double> latestPrices = tradingService.getCryptoPrices();
+        return ResponseEntity.ok(latestPrices);
     }
 
     /**
