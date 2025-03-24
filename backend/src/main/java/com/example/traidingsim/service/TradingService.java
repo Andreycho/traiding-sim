@@ -32,7 +32,7 @@ public class TradingService {
     @Autowired
     private AccountRepository accountRepository;
 
-    private static final double INITIAL_BALANCE = 100000.0;
+    private static final double INITIAL_BALANCE = 10000.0;
     /**
      * -- GETTER --
      *  Get the current account balance.
@@ -183,7 +183,6 @@ public class TradingService {
             }
 
             if (totalAmountBought > 0) {
-                double averageBuyPrice = totalBought / totalAmountBought;
                 double totalRevenue = totalSold;
 
                 double profitLoss = totalRevenue - totalBought;

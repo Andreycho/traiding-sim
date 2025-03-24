@@ -96,7 +96,7 @@ const AccountHoldings: React.FC = () => {
   
         client.subscribe("/topic/prices", (message) => {
           const data = JSON.parse(message.body)
-          console.log(`📩 Received price update: ${data.symbol} -> $${data.price}`)
+          console.log(`Received price update: ${data.symbol} -> $${data.price}`)
   
           setPrices((prevPrices) => ({
             ...prevPrices,
