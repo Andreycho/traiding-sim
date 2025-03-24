@@ -3,7 +3,8 @@
 import type React from "react"
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { Table, TableBody, TableCell, TableHeader, TableRow, TableHead } from "@/components/ui/table" // Assuming you have a UI Table component
+import { Table, TableBody, TableCell, TableHeader, TableRow, TableHead } from "@/components/ui/table"
+import { ArrowLeft } from 'lucide-react'
 
 interface Transaction {
   crypto: string
@@ -78,12 +79,12 @@ const TransactionHistory: React.FC = () => {
 
   return (
     <div className="w-screen min-h-screen left-0 top-0 absolute">
-      {/* Top Bar with Grid Layout */}
       <div className="grid grid-cols-3 items-center w-full p-6 bg-gray-100 shadow-md">
         <div className="flex justify-start">
-          <button onClick={() => navigate("/")} className="px-6 py-3 bg-blue-500 text-white rounded-lg shadow-md">
-            Back
-          </button>
+        <button onClick={() => navigate("/")} className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg shadow-md">
+          <ArrowLeft size={18} />
+          Back to Home
+        </button>
         </div>
 
         <h1 className="text-2xl font-bold text-black text-center">Transaction History</h1>
@@ -95,7 +96,6 @@ const TransactionHistory: React.FC = () => {
 
       <hr className="border-t border-gray-300 w-full mx-auto mb-6" />
 
-      {/* Transaction History Table */}
       <div className="w-full px-6">
         {transactions.length > 0 ? (
           <Table className="w-full border border-gray-300">

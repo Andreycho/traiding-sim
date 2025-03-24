@@ -58,6 +58,12 @@ const Home: React.FC = () => {
           >
             Transaction History
           </button>
+          <button
+            onClick={() => navigate("/analysis")}
+            className="px-6 py-3 bg-blue-500 text-white rounded-lg shadow-md"
+          >
+            Analysis
+          </button>
         </div>
 
         <h1 className="text-2xl font-bold text-black text-center">Crypto Trading Simulator</h1>
@@ -80,4 +86,3 @@ const Home: React.FC = () => {
 }
 
 export default Home
-

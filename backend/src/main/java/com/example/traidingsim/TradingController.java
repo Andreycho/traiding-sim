@@ -111,4 +111,10 @@ public class TradingController {
         return ResponseEntity.ok(tradingService.getCryptoHoldings());
     }
 
+    @GetMapping("/profit-loss")
+    public ResponseEntity<Map<String, Double>> getProfitLoss() {
+        Map<String, Double> profitLossMap = tradingService.calculateProfitLoss();
+        return ResponseEntity.ok(profitLossMap);
+    }
+
 }

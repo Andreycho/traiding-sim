@@ -7,6 +7,7 @@ import SellCryptoForm from "./SellCryptoForm"
 import { toast } from "sonner"
 import { Client } from "@stomp/stompjs"
 import SockJS from "sockjs-client"
+import { ArrowLeft } from 'lucide-react'
 
 interface Holding {
   crypto: string
@@ -176,12 +177,12 @@ const AccountHoldings: React.FC = () => {
 
   return (
     <div className="w-screen min-h-screen left-0 top-0 absolute">
-      {/* Top Bar with Grid Layout */}
       <div className="grid grid-cols-3 items-center w-full p-6 bg-gray-100 shadow-md">
         <div className="flex justify-start">
-          <button onClick={() => navigate("/")} className="px-6 py-3 bg-blue-500 text-white rounded-lg shadow-md">
-            Back to Home
-          </button>
+        <button onClick={() => navigate("/")} className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg shadow-md">
+          <ArrowLeft size={18} />
+          Back to Home
+        </button>
         </div>
 
         <h1 className="text-2xl font-bold text-black text-center">Account Holdings</h1>

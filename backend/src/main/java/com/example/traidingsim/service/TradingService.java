@@ -3,6 +3,7 @@ package com.example.traidingsim.service;
 import com.example.traidingsim.exception.CryptoNotFoundException;
 import com.example.traidingsim.exception.InsufficientFundsException;
 import com.example.traidingsim.exception.InsufficientHoldingsException;
+import com.example.traidingsim.model.enumeration.Type;
 import com.example.traidingsim.repository.AccountRepository;
 import com.example.traidingsim.repository.TransactionRepository;
 import com.example.traidingsim.model.Account;
@@ -14,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -157,6 +159,42 @@ public class TradingService {
 
         return "Successfully sold " + amount + " " + crypto + " for $" + totalRevenue;
     }
+
+    public Map<String, Double> calculateProfitLoss() {
+        Map<String, Double> profitLossMap = new HashMap<>();
+        List<Transaction> transactions = transactionRepository.findAll();
+
+        for (String crypto : getCryptoPrices().keySet()) {
+            double totalBought = 0.0;
+            double totalSold = 0.0;
+            double totalAmountBought = 0.0;
+            double totalAmountSold = 0.0;
+
+            for (Transaction transaction : transactions) {
+                if (transaction.getCrypto().equals(crypto)) {
+                    if (transaction.getType() == Type.BUY) {
+                        totalBought += transaction.getTotal();
+                        totalAmountBought += transaction.getAmount();
+                    } else if (transaction.getType() == Type.SELL) {
+                        totalSold += transaction.getTotal();
+                        totalAmountSold += transaction.getAmount();
+                    }
+                }
+            }
+
+            if (totalAmountBought > 0) {
+                double averageBuyPrice = totalBought / totalAmountBought;
+                double totalRevenue = totalSold;
+
+                double profitLoss = totalRevenue - totalBought;
+                profitLossMap.put(crypto, profitLoss);
+            }
+        }
+
+        return profitLossMap;
+    }
+
+
 
 
     /**
