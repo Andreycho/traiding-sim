@@ -67,8 +67,6 @@ public class KrakenWebSocketService {
             log.debug("Received message: {}", message);
 
             JsonNode jsonNode = objectMapper.readTree(message);
-
-            // Check if the "data" node exists and is an array
             JsonNode dataNode = jsonNode.path("data");
 
             if (dataNode.isArray() && dataNode.size() > 0) {

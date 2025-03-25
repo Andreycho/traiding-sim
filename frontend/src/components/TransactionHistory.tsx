@@ -23,7 +23,6 @@ const TransactionHistory: React.FC = () => {
   const [error, setError] = useState<string | null>(null)
   const [balance, setBalance] = useState<number>(0)
 
-  // Fetch the balance
   const fetchBalance = async () => {
     try {
       const response = await fetch("/api/balance")

@@ -21,7 +21,7 @@ public class FrontendWebSocketService {
     public void broadcastCryptoPrice(CryptoPriceDTO priceDTO) {
         try {
             String message = objectMapper.writeValueAsString(priceDTO);
-            messagingTemplate.convertAndSend("/topic/prices", message); // Use the STOMP broker
+            messagingTemplate.convertAndSend("/topic/prices", message);
 //            log.info("Broadcasted message to /topic/prices: {}", message);
         } catch (Exception e) {
             log.error("Error broadcasting message to WebSocket clients", e);
