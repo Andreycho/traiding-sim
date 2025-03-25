@@ -183,7 +183,6 @@ public class TradingService {
     /**
      * Helper methods.
      */
-
     private void validateAmount(double amount) {
         if (amount <= 0) {
             throw new InvalidAmountException("Amount must be greater than 0");

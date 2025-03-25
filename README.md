@@ -29,7 +29,7 @@ This project simulates a cryptocurrency trading platform. Users can buy and sell
 Ensure the following are installed on your system:
 - **Java 21** or **later** (for Spring Boot backend)
 - **Maven** (for building the backend)
-- **Node.js** and **npm** (for the frontend)
+- **Node.js (v22.14.0)** and **npm** (for the frontend)
 - **H2 Database** (embedded in the backend)
 
 ### Clone the repository
@@ -98,6 +98,15 @@ Use the following credentials to log in:
 - JDBC URL: `jdbc:h2:~/test`
 - Username: `sa`
 - Password: `password`
+
+### Logging
+Logging is configured in the `application.properties` file:
+```
+logging.file.name=logs/crypto-trading.log
+logging.file.path=logs
+```
+- **Log File Location**: The logs are stored in the `logs/crypto-trading.log` file.
+- **Logging Framework**: The application uses **SLF4J** for logging.
 
 ### WebSocket Communication
 The backend communicates with the Kraken API via WebSocket for real-time price updates. The WebSocket URI is set as:
@@ -244,3 +253,20 @@ wss://ws.kraken.com/v2
 }
 ```
 - **Description**: Resets the account balance, transaction history and holdings.
+
+## Scalability Considerations
+To ensure the application can handle increased traffic and data volume, the following scalability strategies can be applied:
+
+### Backend Scalability
+- **Caching**: Use Redis or Memcached to cache frequently accessed data (e.g., cryptocurrency prices) and reduce database queries.
+- **Asynchronous Processing**: Use message queues like RabbitMQ or Kafka to handle high-load transactions asynchronously.
+- **Microservices Architecture**: Break down the monolithic backend into microservices (e.g., separate services for trading, user management, and price fetching).
+
+### Frontend Scalability
+- **State Management**: Use Redux or React Query for better state management to optimize API calls.
+- **Lazy Loading**: Implement lazy loading and code splitting with React to reduce initial load time.
+
+### Real-time Data Scalability
+- **WebSocket Optimization**: Instead of sending price updates for all currencies, allow users to subscribe to specific ones.
+- **Rate Limiting**: Implement request throttling to prevent abuse and excessive WebSocket connections.
+- **Horizontal Scaling for WebSockets**: Use a message broker like Redis Pub/Sub or Kafka to distribute WebSocket events across multiple servers.

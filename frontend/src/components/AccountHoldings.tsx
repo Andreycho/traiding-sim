@@ -194,8 +194,7 @@ const AccountHoldings: React.FC = () => {
 
       <hr className="border-t border-gray-300 w-full mx-auto mb-6" />
 
-      {/* Main Content */}
-      <div className="w-full px-6">
+      <div className="w-full px-6 pb-8">
         {error && <p className="text-red-500 mb-4">{error}</p>}
 
         <div className="w-full bg-white rounded-lg shadow-lg p-6">
@@ -236,21 +235,25 @@ const AccountHoldings: React.FC = () => {
               </div>
             )}
           </div>
+        </div>
+      </div>
 
-          {selectedCrypto && (
-            <div className="mt-6">
+      {selectedCrypto && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-md overflow-hidden">
+            <div className="p-6">
+              <h3 className="text-xl font-bold mb-4">Sell {selectedCrypto}</h3>
               <SellCryptoForm
                 crypto={selectedCrypto}
                 onSell={(crypto, amount) => handleSell(crypto, amount)}
                 onCancel={() => setSelectedCrypto(null)}
               />
             </div>
-          )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }
 
 export default AccountHoldings
-
