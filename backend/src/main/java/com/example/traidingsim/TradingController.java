@@ -45,7 +45,7 @@ public class TradingController {
             return ResponseEntity.badRequest().body(new ApiResponse(false, ex.getMessage()));
         }
     }
-    
+
     /**
      * Endpoint to sell cryptocurrency.
      * @param crypto The cryptocurrency symbol to sell (e.g., BTC, ETH).
