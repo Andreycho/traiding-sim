@@ -8,6 +8,16 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(AccountNotFoundException.class)
+    public ResponseEntity<String> handleAccountNotFound(AccountNotFoundException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(InvalidAmountException.class)
+    public ResponseEntity<String> handleInvalidAmount(InvalidAmountException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
     @ExceptionHandler(InsufficientFundsException.class)
     public ResponseEntity<ErrorResponse> handleInsufficientFundsException(InsufficientFundsException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)

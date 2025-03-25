@@ -45,9 +45,7 @@ public class TradingController {
             return ResponseEntity.badRequest().body(new ApiResponse(false, ex.getMessage()));
         }
     }
-
-
-
+    
     /**
      * Endpoint to sell cryptocurrency.
      * @param crypto The cryptocurrency symbol to sell (e.g., BTC, ETH).
@@ -63,8 +61,6 @@ public class TradingController {
             return ResponseEntity.badRequest().body(new ApiResponse(false, ex.getMessage()));
         }
     }
-
-
 
     /**
      * Endpoint to retrieve the transaction history.
@@ -90,8 +86,6 @@ public class TradingController {
         }
     }
 
-
-
     /**
      * Endpoint to fetch the current account balance.
      * @return The current account balance as a double.
@@ -111,6 +105,10 @@ public class TradingController {
         return ResponseEntity.ok(tradingService.getCryptoHoldings());
     }
 
+    /**
+     * Endpoint to fetch the profit or loss made from all transactions.
+     * @return A map of the profit or loss made from all transactions.
+     */
     @GetMapping("/profit-loss")
     public ResponseEntity<Map<String, Double>> getProfitLoss() {
         Map<String, Double> profitLossMap = tradingService.calculateProfitLoss();

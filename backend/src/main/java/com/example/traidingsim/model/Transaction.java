@@ -25,6 +25,10 @@ public class Transaction {
 
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
+    @ManyToOne
+    @JoinColumn(name = "account_id", nullable = false)
+    private Account account;
+
     public Transaction() {}
 
     public Transaction(String crypto, double amount, double price, double total, Type type) {
@@ -87,4 +91,8 @@ public class Transaction {
     public void setType(Type type) {
         this.type = type;
     }
+
+    public Account getAccount() { return account; }
+
+    public void setAccount(Account account) { this.account = account; }
 }

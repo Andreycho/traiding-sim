@@ -3,6 +3,8 @@ package com.example.traidingsim.model;
 import jakarta.persistence.*;
 import lombok.Setter;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 
@@ -22,6 +24,9 @@ public class Account {
     @MapKeyColumn(name = "crypto")
     @Column(name = "amount")
     private Map<String, Double> cryptoHoldings = new HashMap<>();
+
+    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Transaction> transactions = new ArrayList<>();
 
     public Account() {}
 

@@ -3,10 +3,13 @@ package com.example.traidingsim.websocket;
 import com.example.traidingsim.model.dto.CryptoPriceDTO;
 import com.example.traidingsim.mapper.CryptoPriceMapper;
 import com.example.traidingsim.model.dto.CryptoPricePayloadDTO;
+import com.example.traidingsim.model.dto.SubscribeMessage;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.annotation.PostConstruct;
 import jakarta.websocket.*;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.net.URI;
@@ -19,7 +22,9 @@ import java.util.Map;
 @Slf4j
 public class KrakenWebSocketService {
 
-    private static final String KRAKEN_WEBSOCKET_URI = "wss://ws.kraken.com/v2";
+    @Value("${kraken.websocket.uri}")
+    private String krakenWebSocketUri;
+
     private final ObjectMapper objectMapper;
     private final FrontendWebSocketService frontendWebSocketService;
     private final Map<String, Double> cryptoPrices = new ConcurrentHashMap<>();
@@ -27,13 +32,17 @@ public class KrakenWebSocketService {
     public KrakenWebSocketService(ObjectMapper objectMapper, FrontendWebSocketService frontendWebSocketService) {
         this.objectMapper = objectMapper;
         this.frontendWebSocketService = frontendWebSocketService;
+    }
+
+    @PostConstruct
+    public void init() {
         connectToKrakenWebSocket();
     }
 
     private void connectToKrakenWebSocket() {
         try {
             WebSocketContainer container = ContainerProvider.getWebSocketContainer();
-            container.connectToServer(this, new URI(KRAKEN_WEBSOCKET_URI));
+            container.connectToServer(this, new URI(krakenWebSocketUri));
             log.info("Connected to Kraken WebSocket");
         } catch (Exception e) {
             log.error("Error connecting to Kraken WebSocket: {}", e.getMessage());
@@ -42,19 +51,14 @@ public class KrakenWebSocketService {
 
     @OnOpen
     public void onOpen(Session session) {
-        String subscribeMessage = """
-                {
-                    "method": "subscribe",
-                    "params": {
-                        "channel": "ticker",
-                        "symbol": [
-                            "BTC/USD", "MATIC/GBP", "ETH/USD", "ADA/USD", "SOL/USD", "ALGO/USD"
-                        ]
-                    }
-                }
-        """;
-        session.getAsyncRemote().sendText(subscribeMessage);
-        log.info("Subscribed to Kraken ticker channel");
+        try {
+            SubscribeMessage subscribeMessage = SubscribeMessage.createDefaultSubscription();
+            String jsonMessage = objectMapper.writeValueAsString(subscribeMessage);
+            session.getAsyncRemote().sendText(jsonMessage);
+            log.info("Subscribed to Kraken ticker channel: {}", jsonMessage);
+        } catch (Exception e) {
+            log.error("Error sending subscription message", e);
+        }
     }
 
     @OnMessage
@@ -64,24 +68,33 @@ public class KrakenWebSocketService {
 
             JsonNode jsonNode = objectMapper.readTree(message);
 
-            if (jsonNode.has("data") && jsonNode.get("data").isArray()) {
-                JsonNode dataNode = jsonNode.get("data").get(0);
+            // Check if the "data" node exists and is an array
+            JsonNode dataNode = jsonNode.path("data");
 
-                CryptoPricePayloadDTO payload = new CryptoPricePayloadDTO();
-                payload.setSymbol(dataNode.get("symbol").asText());
-                payload.setLastPrice(dataNode.get("last").asDouble());
+            if (dataNode.isArray() && dataNode.size() > 0) {
+                JsonNode firstData = dataNode.get(0);
 
-                CryptoPriceDTO dto = CryptoPriceMapper.toDTO(payload);
+                String symbol = firstData.path("symbol").asText(null);
+                double lastPrice = firstData.path("last").asDouble(Double.NaN);
 
-                frontendWebSocketService.broadcastCryptoPrice(dto);
+                if (symbol != null && !symbol.isEmpty() && !Double.isNaN(lastPrice)) {
+                    CryptoPricePayloadDTO payload = new CryptoPricePayloadDTO();
+                    payload.setSymbol(symbol);
+                    payload.setLastPrice(lastPrice);
 
-                cryptoPrices.put(payload.getSymbol(), payload.getLastPrice());
-                log.info("Updated price for {}: {}", payload.getSymbol(), payload.getLastPrice());
+                    CryptoPriceDTO dto = CryptoPriceMapper.toDTO(payload);
+
+                    frontendWebSocketService.broadcastCryptoPrice(dto);
+
+                    cryptoPrices.put(symbol, lastPrice);
+                    log.info("Updated price for {}: {}", symbol, lastPrice);
+                }
             }
         } catch (Exception e) {
             log.error("Error processing WebSocket message", e);
         }
     }
+
 
     public Map<String, Double> getCryptoPrices() {
         return Collections.unmodifiableMap(cryptoPrices);
